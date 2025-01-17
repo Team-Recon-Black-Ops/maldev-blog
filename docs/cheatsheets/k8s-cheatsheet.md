@@ -3,7 +3,15 @@
 Keep in mind that additional info is present [here](https://team-recon-black-ops.github.io/maldev-blog/containers/kubernetes/) 
 
 ## Summary
-
+- [Kubernetes malicious commands](#kubernetes-malicious-commands)
+  - [Summary](#summary)
+  - [Search for ClusterAdmins](#search-for-clusteradmins)
+  - [Dump all Secrets of the Cluster](#dump-all-secrets-of-the-cluster)
+  - [Create a ClusterRole with ClusterAdmin privileges](#create-a-clusterrole-with-clusteradmin-privileges)
+  - [Search for loot in Environment Variables that were added in Deployment YAMLs](#search-for-loot-in-environment-variables-that-were-added-in-deployment-yamls)
+  - [Dump ConfigMaps of the Cluster](#dump-configmaps-of-the-cluster)
+  - [Spawn a pod from within a Pod using the auto mounted ServiceAccount Token](#spawn-a-pod-from-within-a-pod-using-the-auto-mounted-serviceaccount-token)
+  - [Kill Kyverno Policy Engine](#kill-kyverno-policy-engine)
 
 ## Search for ClusterAdmins
 
