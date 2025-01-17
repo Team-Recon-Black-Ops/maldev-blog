@@ -1,8 +1,7 @@
-site_name: Internal All The Things
-site_description: 'Active Directory and Internal Pentest Cheatsheets'
-site_url: https://swisskyrepo.github.io/InternalAllTheThings
-
-repo_url: https://github.com/swisskyrepo/InternalAllTheThings
+site_name: MalDev & Red Team Blog
+site_description: 'Learning Blog'
+site_url: https://team-recon-black-ops.github.io/
+repo_url: https://github.com/Team-Recon-Black-Ops/maldev-blog
 edit_uri: blob/main/docs/
 
 theme:
