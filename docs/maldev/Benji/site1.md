@@ -4,4 +4,5 @@ this is a test
 
 Lorem ipsum 
 
-![](/assets/banner.png)
+![](https://raw.githubusercontent.com/Team-Recon-Black-Ops/maldev-blog/master/assets/banner.png)
+![](./assets/banner.png)
