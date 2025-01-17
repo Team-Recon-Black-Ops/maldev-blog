@@ -37,6 +37,8 @@
 | SOCKS v4a     | ✅    | ❌    | ✅    | ❌    | ✅       | ❌        |
 | SOCKS v5      | ✅    | ✅    | ✅    | ✅    | ✅       | ✅        |
 
+Remark: FQDN call requires UDP
+
 
 ## Windows netsh Port Forwarding
 
