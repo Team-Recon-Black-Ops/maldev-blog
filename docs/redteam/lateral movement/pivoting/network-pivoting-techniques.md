@@ -31,11 +31,11 @@
 
 ## SOCKS Compatibility Table
 
-| SOCKS Version | TCP   | UDP   | IPv4  | IPv6  | Hostname |
-| ------------- | :---: | :---: | :---: | :---: | :---:    |
-| SOCKS v4      | ✅    | ❌    | ✅    | ❌    | ❌       |
-| SOCKS v4a     | ✅    | ❌    | ✅    | ❌    | ✅       |
-| SOCKS v5      | ✅    | ✅    | ✅    | ✅    | ✅       |
+| SOCKS Version | TCP   | UDP   | IPv4  | IPv6  | Hostname | Call FQDN |
+| ------------- | :---: | :---: | :---: | :---: | :---:    |:---:      |
+| SOCKS v4      | ✅    | ❌    | ✅    | ❌    | ❌       | ❌        |
+| SOCKS v4a     | ✅    | ❌    | ✅    | ❌    | ✅       | ❌        |
+| SOCKS v5      | ✅    | ✅    | ✅    | ✅    | ✅       | ✅        |
 
 
 ## Windows netsh Port Forwarding
