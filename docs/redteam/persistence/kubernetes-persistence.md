@@ -3,9 +3,9 @@
 > Core idea is coming from [BishopFox/badPods](https://github.com/BishopFox/badPods/) and is a collection of manifests that create pods with different elevated privileges. Quickly demonstrate the impact of allowing security sensitive pod attributes like hostNetwork, hostPID, hostPath, hostIPC, and privileged.
 
 
-![](https://github.com/BishopFox/badPods/raw/main/.github/images/Title.jpg)
+<img height="100" src="https://github.com/BishopFox/badPods/raw/main/.github/images/Title.jpg"></img>
 
-An elevated variant that was battle tested:
+An enhanced variant that was battle tested:
 ```yaml
 apiVersion: batch/v1
 kind: CronJob
